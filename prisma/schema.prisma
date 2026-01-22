@@ -1,0 +1,664 @@
+// Temple Ticket & Shopping Multi-Vendor Platform - Database Schema
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+// ============= USER & AUTH =============
+model User {
+  id            String    @id @default(cuid())
+  email         String    @unique
+  password      String
+  name          String
+  phone         String?
+  role          UserRole  @default(CUSTOMER)
+  avatar        String?
+  emailVerified DateTime?
+  isActive      Boolean   @default(true)
+  createdAt     DateTime  @default(now())
+  updatedAt     DateTime  @updatedAt
+
+  // Relations
+  vendor        Vendor?
+  orders        Order[]
+  ticketBookings TicketBooking[]
+  reviews       Review[]
+  addresses     Address[]
+  cart          Cart?
+  wishlist      WishlistItem[]
+}
+
+enum UserRole {
+  SUPER_ADMIN
+  TEMPLE_VENDOR
+  CUSTOMER
+}
+
+model Address {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  name        String
+  phone       String
+  addressLine1 String
+  addressLine2 String?
+  city        String
+  state       String
+  country     String
+  postalCode  String
+  isDefault   Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  orders      Order[]
+}
+
+// ============= VENDOR & TEMPLE =============
+model Vendor {
+  id                    String   @id @default(cuid())
+  userId                String   @unique
+  user                  User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  businessName          String
+  businessEmail         String
+  businessPhone         String
+  bankName              String?
+  bankAccountNumber     String?
+  bankAccountHolder     String?
+  bankBranch            String?
+  ticketCommission      Decimal  @default(10) @db.Decimal(5, 2)
+  productCommission     Decimal  @default(15) @db.Decimal(5, 2)
+  isApproved            Boolean  @default(false)
+  walletBalance         Decimal  @default(0) @db.Decimal(12, 2)
+  createdAt             DateTime @default(now())
+  updatedAt             DateTime @updatedAt
+
+  temple                Temple?
+  withdrawalRequests    WithdrawalRequest[]
+}
+
+model Temple {
+  id              String   @id @default(cuid())
+  vendorId        String   @unique
+  vendor          Vendor   @relation(fields: [vendorId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String   @unique
+  description     String   @db.Text
+  shortDescription String?
+  address         String
+  city            String
+  district        String
+  province        String
+  country         String
+  postalCode      String?
+  latitude        Decimal? @db.Decimal(10, 8)
+  longitude       Decimal? @db.Decimal(11, 8)
+  phone           String?
+  email           String?
+  website         String?
+  openingTime     String?
+  closingTime     String?
+  featuredImage   String?
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  viewCount       Int      @default(0)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  gallery         TempleGallery[]
+  tickets         Ticket[]
+  products        Product[]
+  collections     Collection[]
+  shippingZones   ShippingZone[]
+  reviews         Review[]
+  ticketBookings  TicketBooking[]
+  orders          Order[]
+}
+
+model TempleGallery {
+  id        String   @id @default(cuid())
+  templeId  String
+  temple    Temple   @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  caption   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+// ============= TICKETS =============
+model Ticket {
+  id                  String   @id @default(cuid())
+  templeId            String
+  temple              Temple   @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  name                String
+  type                TicketType
+  description         String?  @db.Text
+  price               Decimal  @db.Decimal(10, 2)
+  currency            String   @default("USD")
+  maxBookingsPerDay   Int?
+  requiresName        Boolean  @default(true)
+  requiresRasi        Boolean  @default(false)
+  requiresNakshatram  Boolean  @default(false)
+  maxExtraPeople      Int      @default(4)
+  extraPersonCharge   Decimal  @default(0) @db.Decimal(10, 2)
+  isActive            Boolean  @default(true)
+  createdAt           DateTime @default(now())
+  updatedAt           DateTime @updatedAt
+
+  // For parking tickets
+  vehiclePricing      VehiclePricing[]
+  bookings            TicketBooking[]
+}
+
+enum TicketType {
+  POOJA
+  ARCHANAI
+  DARSHAN
+  PARKING
+  SPECIAL
+}
+
+model VehiclePricing {
+  id          String   @id @default(cuid())
+  ticketId    String
+  ticket      Ticket   @relation(fields: [ticketId], references: [id], onDelete: Cascade)
+  vehicleType String
+  price       Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+}
+
+model TicketBooking {
+  id              String   @id @default(cuid())
+  bookingNumber   String   @unique
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  templeId        String
+  temple          Temple   @relation(fields: [templeId], references: [id])
+  ticketId        String
+  ticket          Ticket   @relation(fields: [ticketId], references: [id])
+  bookingDate     DateTime
+  visitorName     String
+  visitorPhone    String?
+  visitorEmail    String?
+  rasi            String?
+  nakshatram      String?
+  extraPeopleCount Int     @default(0)
+  vehicleType     String?
+  vehicleNumber   String?
+  quantity        Int      @default(1)
+  unitPrice       Decimal  @db.Decimal(10, 2)
+  extraPeopleCharge Decimal @default(0) @db.Decimal(10, 2)
+  serviceFee      Decimal  @default(0) @db.Decimal(10, 2)
+  totalAmount     Decimal  @db.Decimal(10, 2)
+  currency        String   @default("USD")
+  status          BookingStatus @default(PENDING)
+  qrCode          String?
+  paymentId       String?
+  payment         Payment? @relation(fields: [paymentId], references: [id])
+  isScanned       Boolean  @default(false)
+  scannedAt       DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  extraPeople     TicketExtraPerson[]
+}
+
+model TicketExtraPerson {
+  id          String   @id @default(cuid())
+  bookingId   String
+  booking     TicketBooking @relation(fields: [bookingId], references: [id], onDelete: Cascade)
+  name        String
+  rasi        String?
+  nakshatram  String?
+  createdAt   DateTime @default(now())
+}
+
+enum BookingStatus {
+  PENDING
+  CONFIRMED
+  CANCELLED
+  USED
+  EXPIRED
+}
+
+// ============= PRODUCTS =============
+model Collection {
+  id          String   @id @default(cuid())
+  templeId    String
+  temple      Temple   @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  name        String
+  slug        String
+  description String?  @db.Text
+  image       String?
+  isActive    Boolean  @default(true)
+  sortOrder   Int      @default(0)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  products    ProductCollection[]
+
+  @@unique([templeId, slug])
+}
+
+model Product {
+  id              String   @id @default(cuid())
+  templeId        String
+  temple          Temple   @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  name            String
+  slug            String
+  sku             String?
+  description     String?  @db.Text
+  shortDescription String?
+  price           Decimal  @db.Decimal(10, 2)
+  compareAtPrice  Decimal? @db.Decimal(10, 2)
+  costPrice       Decimal? @db.Decimal(10, 2)
+  currency        String   @default("USD")
+  stock           Int      @default(0)
+  lowStockThreshold Int    @default(5)
+  weight          Decimal? @db.Decimal(8, 2)
+  weightUnit      String   @default("kg")
+  featuredImage   String?
+  isActive        Boolean  @default(true)
+  isFeatured      Boolean  @default(false)
+  isDigital       Boolean  @default(false)
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  // Relations
+  images          ProductImage[]
+  collections     ProductCollection[]
+  variants        ProductVariant[]
+  orderItems      OrderItem[]
+  cartItems       CartItem[]
+  wishlistItems   WishlistItem[]
+  reviews         Review[]
+
+  @@unique([templeId, slug])
+}
+
+model ProductImage {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  imageUrl  String
+  altText   String?
+  sortOrder Int      @default(0)
+  createdAt DateTime @default(now())
+}
+
+model ProductCollection {
+  id           String     @id @default(cuid())
+  productId    String
+  product      Product    @relation(fields: [productId], references: [id], onDelete: Cascade)
+  collectionId String
+  collection   Collection @relation(fields: [collectionId], references: [id], onDelete: Cascade)
+
+  @@unique([productId, collectionId])
+}
+
+model ProductVariant {
+  id        String   @id @default(cuid())
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  name      String
+  sku       String?
+  price     Decimal  @db.Decimal(10, 2)
+  stock     Int      @default(0)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+// ============= SHIPPING =============
+model ShippingZone {
+  id           String   @id @default(cuid())
+  templeId     String
+  temple       Temple   @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  name         String
+  type         ShippingZoneType
+  countries    String?  @db.Text // JSON array of country codes
+  states       String?  @db.Text // JSON array of state codes
+  districts    String?  @db.Text // JSON array of district names
+  createdAt    DateTime @default(now())
+  updatedAt    DateTime @updatedAt
+
+  rates        ShippingRate[]
+}
+
+enum ShippingZoneType {
+  LOCAL
+  DOMESTIC
+  INTERNATIONAL
+}
+
+model ShippingRate {
+  id              String       @id @default(cuid())
+  shippingZoneId  String
+  shippingZone    ShippingZone @relation(fields: [shippingZoneId], references: [id], onDelete: Cascade)
+  name            String
+  type            ShippingRateType
+  price           Decimal      @db.Decimal(10, 2)
+  minWeight       Decimal?     @db.Decimal(8, 2)
+  maxWeight       Decimal?     @db.Decimal(8, 2)
+  minOrderAmount  Decimal?     @db.Decimal(10, 2)
+  freeShippingMin Decimal?     @db.Decimal(10, 2)
+  estimatedDays   String?
+  isActive        Boolean      @default(true)
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+}
+
+enum ShippingRateType {
+  FLAT_RATE
+  WEIGHT_BASED
+  FREE
+  PICKUP
+}
+
+// ============= ORDERS =============
+model Order {
+  id              String   @id @default(cuid())
+  orderNumber     String   @unique
+  userId          String
+  user            User     @relation(fields: [userId], references: [id])
+  templeId        String
+  temple          Temple   @relation(fields: [templeId], references: [id])
+  addressId       String?
+  address         Address? @relation(fields: [addressId], references: [id])
+  shippingAddress String?  @db.Text // JSON snapshot
+  billingAddress  String?  @db.Text // JSON snapshot
+  subtotal        Decimal  @db.Decimal(12, 2)
+  shippingCost    Decimal  @default(0) @db.Decimal(10, 2)
+  taxAmount       Decimal  @default(0) @db.Decimal(10, 2)
+  serviceFee      Decimal  @default(0) @db.Decimal(10, 2)
+  discountAmount  Decimal  @default(0) @db.Decimal(10, 2)
+  totalAmount     Decimal  @db.Decimal(12, 2)
+  currency        String   @default("USD")
+  status          OrderStatus @default(PENDING)
+  shippingMethod  String?
+  trackingNumber  String?
+  notes           String?  @db.Text
+  paymentId       String?
+  payment         Payment? @relation(fields: [paymentId], references: [id])
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  items           OrderItem[]
+}
+
+model OrderItem {
+  id          String   @id @default(cuid())
+  orderId     String
+  order       Order    @relation(fields: [orderId], references: [id], onDelete: Cascade)
+  productId   String
+  product     Product  @relation(fields: [productId], references: [id])
+  variantId   String?
+  name        String
+  sku         String?
+  price       Decimal  @db.Decimal(10, 2)
+  quantity    Int
+  totalPrice  Decimal  @db.Decimal(10, 2)
+  createdAt   DateTime @default(now())
+}
+
+enum OrderStatus {
+  PENDING
+  PROCESSING
+  SHIPPED
+  DELIVERED
+  CANCELLED
+  REFUNDED
+}
+
+// ============= CART & WISHLIST =============
+model Cart {
+  id        String   @id @default(cuid())
+  userId    String   @unique
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  items     CartItem[]
+}
+
+model CartItem {
+  id        String   @id @default(cuid())
+  cartId    String
+  cart      Cart     @relation(fields: [cartId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id])
+  variantId String?
+  quantity  Int      @default(1)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  @@unique([cartId, productId, variantId])
+}
+
+model WishlistItem {
+  id        String   @id @default(cuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  productId String
+  product   Product  @relation(fields: [productId], references: [id], onDelete: Cascade)
+  createdAt DateTime @default(now())
+
+  @@unique([userId, productId])
+}
+
+// ============= PAYMENTS =============
+model Payment {
+  id              String   @id @default(cuid())
+  paymentNumber   String   @unique
+  type            PaymentType
+  method          PaymentMethod
+  amount          Decimal  @db.Decimal(12, 2)
+  currency        String   @default("USD")
+  status          PaymentStatus @default(PENDING)
+  stripePaymentId String?
+  stripeSessionId String?
+  bankReference   String?
+  chequeNumber    String?
+  proofImage      String?
+  notes           String?  @db.Text
+  paidAt          DateTime?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+
+  orders          Order[]
+  ticketBookings  TicketBooking[]
+}
+
+enum PaymentType {
+  TICKET
+  PRODUCT
+  COMBINED
+}
+
+enum PaymentMethod {
+  STRIPE
+  CASH_ON_DELIVERY
+  BANK_TRANSFER
+  BANK_DEPOSIT
+  CHEQUE
+}
+
+enum PaymentStatus {
+  PENDING
+  PROCESSING
+  COMPLETED
+  FAILED
+  REFUNDED
+  CANCELLED
+}
+
+// ============= WALLET & WITHDRAWALS =============
+model WithdrawalRequest {
+  id            String   @id @default(cuid())
+  vendorId      String
+  vendor        Vendor   @relation(fields: [vendorId], references: [id])
+  amount        Decimal  @db.Decimal(12, 2)
+  currency      String   @default("USD")
+  status        WithdrawalStatus @default(PENDING)
+  bankDetails   String?  @db.Text // JSON snapshot
+  processedBy   String?
+  processedAt   DateTime?
+  notes         String?  @db.Text
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+enum WithdrawalStatus {
+  PENDING
+  APPROVED
+  PROCESSING
+  COMPLETED
+  REJECTED
+}
+
+// ============= REVIEWS =============
+model Review {
+  id          String   @id @default(cuid())
+  userId      String
+  user        User     @relation(fields: [userId], references: [id])
+  templeId    String?
+  temple      Temple?  @relation(fields: [templeId], references: [id], onDelete: Cascade)
+  productId   String?
+  product     Product? @relation(fields: [productId], references: [id], onDelete: Cascade)
+  rating      Int
+  title       String?
+  comment     String?  @db.Text
+  isApproved  Boolean  @default(false)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+// ============= SYSTEM SETTINGS =============
+model Setting {
+  id        String   @id @default(cuid())
+  key       String   @unique
+  value     String   @db.Text
+  type      String   @default("string") // string, number, boolean, json
+  group     String   @default("general")
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Language {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  nativeName  String
+  isActive    Boolean  @default(true)
+  isDefault   Boolean  @default(false)
+  translations String  @db.LongText // JSON
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model Currency {
+  id            String   @id @default(cuid())
+  code          String   @unique
+  name          String
+  symbol        String
+  exchangeRate  Decimal  @db.Decimal(12, 6)
+  isActive      Boolean  @default(true)
+  isDefault     Boolean  @default(false)
+  countryCode   String?
+  createdAt     DateTime @default(now())
+  updatedAt     DateTime @updatedAt
+}
+
+model Country {
+  id          String   @id @default(cuid())
+  code        String   @unique
+  name        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  provinces   Province[]
+}
+
+model Province {
+  id          String   @id @default(cuid())
+  countryId   String
+  country     Country  @relation(fields: [countryId], references: [id], onDelete: Cascade)
+  code        String
+  name        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  districts   District[]
+
+  @@unique([countryId, code])
+}
+
+model District {
+  id          String   @id @default(cuid())
+  provinceId  String
+  province    Province @relation(fields: [provinceId], references: [id], onDelete: Cascade)
+  name        String
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+
+  @@unique([provinceId, name])
+}
+
+model TaxRate {
+  id          String   @id @default(cuid())
+  name        String
+  type        TaxType
+  rate        Decimal  @db.Decimal(5, 2)
+  country     String?
+  state       String?
+  applyTo     String   @default("all") // all, products, tickets
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+enum TaxType {
+  VAT
+  GST
+  CUSTOM
+}
+
+model EmailTemplate {
+  id        String   @id @default(cuid())
+  name      String   @unique
+  subject   String
+  body      String   @db.LongText
+  variables String?  @db.Text // JSON array of available variables
+  isActive  Boolean  @default(true)
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+}
+
+model Page {
+  id          String   @id @default(cuid())
+  slug        String   @unique
+  title       String
+  content     String   @db.LongText
+  metaTitle   String?
+  metaDesc    String?
+  metaKeywords String?
+  isActive    Boolean  @default(true)
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+}
+
+model AuditLog {
+  id          String   @id @default(cuid())
+  userId      String?
+  action      String
+  entity      String
+  entityId    String?
+  oldValue    String?  @db.Text
+  newValue    String?  @db.Text
+  ipAddress   String?
+  userAgent   String?
+  createdAt   DateTime @default(now())
+}
