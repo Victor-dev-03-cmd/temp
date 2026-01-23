@@ -1,10 +1,6 @@
 import { NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
-
-// Replace with your own cart clearing logic
-const clearCart = async (userId: string) => {
-  return { userId }
-}
+import { prisma } from "@/lib/prisma"
 
 export async function POST() {
   try {
@@ -14,7 +10,15 @@ export async function POST() {
       return NextResponse.json({ message: "Not authenticated" }, { status: 401 })
     }
 
-    await clearCart(session.id)
+    const cart = await prisma.cart.findUnique({
+      where: { userId: session.id },
+    })
+
+    if (cart) {
+      await prisma.cartItem.deleteMany({
+        where: { cartId: cart.id },
+      })
+    }
 
     return NextResponse.json({ message: "Cart cleared" })
   } catch (error) {

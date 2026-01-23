@@ -1,30 +1,6 @@
 import { type NextRequest, NextResponse } from "next/server"
 import { getSession } from "@/lib/auth"
-
-// Replace with your own data fetching logic
-const fetchCartItems = async (userId: string) => {
-  return []
-}
-
-// Replace with your own cart creation logic
-const createCart = async (userId: string) => {
-  return { id: "", userId, items: [] }
-}
-
-// Replace with your own cart item creation logic
-const createCartItem = async (cartId: string, productId: string, quantity: number) => {
-  return { id: "", cartId, productId, quantity }
-}
-
-// Replace with your own cart item update logic
-const updateCartItem = async (cartId: string, productId: string, quantity: number) => {
-  return { id: "", cartId, productId, quantity }
-}
-
-// Replace with your own cart item deletion logic
-const deleteCartItem = async (cartId: string, productId: string) => {
-  return { cartId, productId }
-}
+import { prisma } from "@/lib/prisma"
 
 export async function GET() {
   try {
@@ -34,9 +10,40 @@ export async function GET() {
       return NextResponse.json({ items: [] })
     }
 
-    const items = await fetchCartItems(session.id)
+    const cart = await prisma.cart.findUnique({
+      where: { userId: session.id },
+      include: {
+        items: {
+          include: {
+            product: {
+              include: {
+                images: true,
+                temple: { select: { id: true, name: true } },
+              },
+            },
+          },
+        },
+      },
+    })
 
-    return NextResponse.json({ items })
+    return NextResponse.json({
+      items:
+        cart?.items.map((item) => ({
+          id: item.id,
+          productId: item.productId,
+          templeId: item.product.templeId,
+          quantity: item.quantity,
+          product: {
+            id: item.product.id,
+            name: item.product.name,
+            slug: item.product.slug,
+            price: Number(item.product.price),
+            featuredImage: item.product.featuredImage,
+            stock: item.product.stock,
+            temple: item.product.temple,
+          },
+        })) || [],
+    })
   } catch (error) {
     console.error("Cart fetch error:", error)
     return NextResponse.json({ items: [] })
@@ -54,17 +61,37 @@ export async function POST(request: NextRequest) {
     const { productId, quantity = 1 } = await request.json()
 
     // Get or create cart
-    let cart = await createCart(session.id)
+    let cart = await prisma.cart.findUnique({
+      where: { userId: session.id },
+    })
+
+    if (!cart) {
+      cart = await prisma.cart.create({
+        data: { userId: session.id },
+      })
+    }
 
     // Check if item exists
-    const existingItem = await fetchCartItems(session.id).then((items) =>
-      items.find((item) => item.productId === productId),
-    )
+    const existingItem = await prisma.cartItem.findFirst({
+      where: {
+        cartId: cart.id,
+        productId,
+      },
+    })
 
     if (existingItem) {
-      await updateCartItem(cart.id, productId, (existingItem as any).quantity + quantity)
+      await prisma.cartItem.update({
+        where: { id: existingItem.id },
+        data: { quantity: existingItem.quantity + quantity },
+      })
     } else {
-      await createCartItem(cart.id, productId, quantity)
+      await prisma.cartItem.create({
+        data: {
+          cartId: cart.id,
+          productId,
+          quantity,
+        },
+      })
     }
 
     return NextResponse.json({ message: "Item added to cart" })
@@ -84,16 +111,23 @@ export async function PUT(request: NextRequest) {
 
     const { productId, quantity } = await request.json()
 
-    const cart = await createCart(session.id)
+    const cart = await prisma.cart.findUnique({
+      where: { userId: session.id },
+    })
 
     if (!cart) {
       return NextResponse.json({ message: "Cart not found" }, { status: 404 })
     }
 
     if (quantity <= 0) {
-      await deleteCartItem(cart.id, productId)
+      await prisma.cartItem.deleteMany({
+        where: { cartId: cart.id, productId },
+      })
     } else {
-      await updateCartItem(cart.id, productId, quantity)
+      await prisma.cartItem.updateMany({
+        where: { cartId: cart.id, productId },
+        data: { quantity },
+      })
     }
 
     return NextResponse.json({ message: "Cart updated" })
@@ -114,10 +148,14 @@ export async function DELETE(request: NextRequest) {
     const { searchParams } = new URL(request.url)
     const productId = searchParams.get("productId")
 
-    const cart = await createCart(session.id)
+    const cart = await prisma.cart.findUnique({
+      where: { userId: session.id },
+    })
 
     if (cart && productId) {
-      await deleteCartItem(cart.id, productId)
+      await prisma.cartItem.deleteMany({
+        where: { cartId: cart.id, productId },
+      })
     }
 
     return NextResponse.json({ message: "Item removed" })

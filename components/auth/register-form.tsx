@@ -15,7 +15,7 @@ import { Loader2, Mail, Lock, User, Phone, AlertCircle, CheckCircle } from "luci
 
 export function RegisterForm() {
   const router = useRouter()
-  const { register } = useAuth()
+  const { register, login } = useAuth()
   const [formData, setFormData] = useState({
     name: "",
     email: "",
@@ -60,10 +60,13 @@ export function RegisterForm() {
         password: formData.password,
         role: formData.role,
       })
+      // Automatically log in the user after successful registration
+      await login(formData.email, formData.password)
       setSuccess(true)
       setTimeout(() => {
-        router.push("/login")
-      }, 2000)
+        router.push("/") // Redirect to home page
+        router.refresh() // Refresh the page to update navbar
+      }, 1000)
     } catch (err) {
       setError(err instanceof Error ? err.message : "Registration failed")
     } finally {
@@ -77,7 +80,7 @@ export function RegisterForm() {
         <CardContent className="p-6">
           <Alert className="border-green-500 bg-green-50 text-green-700">
             <CheckCircle className="h-4 w-4" />
-            <AlertDescription>Registration successful! Redirecting to login...</AlertDescription>
+            <AlertDescription>Registration successful! Redirecting to home...</AlertDescription>
           </Alert>
         </CardContent>
       </Card>
