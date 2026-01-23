@@ -1,5 +1,5 @@
 import { type NextRequest, NextResponse } from "next/server"
-
+import { register } from "@/lib/auth"
 
 export async function POST(request: NextRequest) {
   try {
@@ -13,10 +13,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ message: "Password must be at least 8 characters" }, { status: 400 })
     }
 
-
+    const user = await register(data)
 
     return NextResponse.json({
-      // user: { id: user.id, email: user.email, name: user.name },
+      user: { id: user.id, email: user.email, name: user.name },
       message: "Registration successful",
     })
   } catch (error) {
