@@ -1,13 +1,28 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { prisma } from "@/lib/prisma"
+
+// Replace with your own data fetching logic
+const fetchLanguage = async (locale: string) => {
+  // In a real application, you would fetch this from a database or a file
+  const languages: Record<string, any> = {
+    en: {
+      translations: { "nav.home": "Home", "nav.temples": "Temples" },
+      name: "English",
+      nativeName: "English",
+    },
+    ta: {
+      translations: { "nav.home": "முகப்பு", "nav.temples": "கோயில்கள்" },
+      name: "Tamil",
+      nativeName: "தமிழ்",
+    },
+  }
+  return languages[locale] || null
+}
 
 export async function GET(request: NextRequest, { params }: { params: Promise<{ locale: string }> }) {
   try {
     const { locale } = await params
 
-    const language = await prisma.language.findUnique({
-      where: { code: locale, isActive: true },
-    })
+    const language = await fetchLanguage(locale)
 
     if (!language) {
       return NextResponse.json({
@@ -16,11 +31,9 @@ export async function GET(request: NextRequest, { params }: { params: Promise<{ 
       })
     }
 
-    const translations = JSON.parse(language.translations || "{}")
-
     return NextResponse.json({
-      translations,
-      locale: language.code,
+      translations: language.translations,
+      locale: locale,
       name: language.name,
       nativeName: language.nativeName,
     })
