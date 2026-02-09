@@ -12,9 +12,16 @@ import {
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
+import { useRouter } from "next/navigation" // <-- useRouter-ஐ import செய்கிறோம்
 
 export function UserNav() {
   const { session, loading, logout } = useAuth()
+  const router = useRouter() // <-- router-ஐ initialize செய்கிறோம்
+
+  const handleLogout = async () => {
+    await logout()
+    router.push("/") // <-- logout செய்த பிறகு, home பக்கத்திற்கு அனுப்புகிறோம்
+  }
 
   if (loading) {
     // This provides a placeholder while the session is being loaded.
@@ -71,7 +78,7 @@ export function UserNav() {
         )}
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={logout}>
+        <DropdownMenuItem onClick={handleLogout}> {/* <-- புதிய handleLogout function-ஐ அழைக்கிறோம் */}
           Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
