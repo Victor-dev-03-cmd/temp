@@ -9,23 +9,23 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { Avatar, AvatarFallback } from "@/components/ui/avatar"
 import { Button } from "@/components/ui/button"
 import Link from "next/link"
-import { useRouter } from "next/navigation" // <-- useRouter-ஐ import செய்கிறோம்
+import { useRouter } from "next/navigation"
 
 export function UserNav() {
   const { session, loading, logout } = useAuth()
-  const router = useRouter() // <-- router-ஐ initialize செய்கிறோம்
+  const router = useRouter()
 
   const handleLogout = async () => {
     await logout()
-    router.push("/") // <-- logout செய்த பிறகு, home பக்கத்திற்கு அனுப்புகிறோம்
+    router.push("/")
   }
 
   if (loading) {
     // This provides a placeholder while the session is being loaded.
-    return <div className="h-9 w-20 animate-pulse rounded-md bg-muted" />
+    return <div className="h-9 w-9 rounded-full animate-pulse bg-muted" />
   }
 
   if (!session) {
@@ -41,9 +41,11 @@ export function UserNav() {
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
-        <Button variant="ghost" className="relative h-9 w-9 rounded-full">
+        <Button
+          variant="ghost"
+          className="relative h-9 w-9 rounded-full hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
+        >
           <Avatar className="h-9 w-9">
-            <AvatarImage src={`https://avatar.vercel.sh/${user.email}`} alt={profile.full_name} />
             <AvatarFallback>{profile.full_name?.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </Button>
@@ -60,25 +62,25 @@ export function UserNav() {
         <DropdownMenuSeparator />
         
         {profile.role === "ADMIN" && (
-          <Link href="/admin/dashboard">
+          <Link href="/admin">
             <DropdownMenuItem>Dashboard</DropdownMenuItem>
           </Link>
         )}
 
         {profile.role === "VENDOR" && (
-          <Link href="/vendor/dashboard">
+          <Link href="/vendor">
             <DropdownMenuItem>Dashboard</DropdownMenuItem>
           </Link>
         )}
 
         {profile.role === "CUSTOMER" && (
-          <Link href="/account/profile">
-            <DropdownMenuItem>Profile Settings</DropdownMenuItem>
+          <Link href="/account">
+            <DropdownMenuItem>My Account</DropdownMenuItem>
           </Link>
         )}
 
         <DropdownMenuSeparator />
-        <DropdownMenuItem onClick={handleLogout}> {/* <-- புதிய handleLogout function-ஐ அழைக்கிறோம் */}
+        <DropdownMenuItem onClick={handleLogout}>
           Sign out
         </DropdownMenuItem>
       </DropdownMenuContent>
