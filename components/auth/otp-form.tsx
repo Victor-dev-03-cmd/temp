@@ -2,7 +2,7 @@
 
 import * as React from "react"
 import { useState } from "react"
-import { useAuth } from "@/contexts/auth-context" // <-- useAuth-ஐ import செய்கிறோம்
+import { createSupabaseBrowserClient } from "@/lib/supabase/client" // <-- Supabase client-ஐ import செய்கிறோம்
 import {
   InputOTP,
   InputOTPGroup,
@@ -18,7 +18,7 @@ interface OtpFormProps {
 }
 
 export function OtpForm({ email, onSuccess }: OtpFormProps) {
-  const { verifyOtp } = useAuth() // <-- verifyOtp function-ஐப் பெறுகிறோம்
+  const supabase = createSupabaseBrowserClient() // <-- Supabase client-ஐ உருவாக்குகிறோம்
   const [otp, setOtp] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [error, setError] = useState("")
@@ -28,13 +28,25 @@ export function OtpForm({ email, onSuccess }: OtpFormProps) {
     setIsLoading(true)
     setError("")
 
-    try {
-      await verifyOtp(email, otp) // <-- context-ல் உள்ள function-ஐ அழைக்கிறோம்
-      onSuccess()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred.")
-    } finally {
+    if (!supabase) {
+        setError("Supabase client is not available.")
+        setIsLoading(false)
+        return
+    }
+
+    const { error } = await supabase.auth.verifyOtp({
+      email,
+      token: otp,
+      type: "signup",
+    })
+
+    if (error) {
+      setError(error.message)
       setIsLoading(false)
+    } else {
+      // OTP is correct. The onAuthStateChange listener in AuthContext
+      // will now detect the SIGNED_IN event and handle the rest.
+      onSuccess()
     }
   }
 
