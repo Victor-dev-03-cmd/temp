@@ -1,8 +1,7 @@
 "use client"
 
 import type React from "react"
-
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { useAuth } from "@/contexts/auth-context"
 import { Button } from "@/components/ui/button"
@@ -11,7 +10,9 @@ import { Label } from "@/components/ui/label"
 import { Card, CardContent } from "@/components/ui/card"
 import { Alert, AlertDescription } from "@/components/ui/alert"
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group"
+import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Loader2, Mail, Lock, User, Phone, AlertCircle, CheckCircle } from "lucide-react"
+import countries from "@/config/countries.json"
 
 export function RegisterForm() {
   const router = useRouter()
@@ -23,7 +24,9 @@ export function RegisterForm() {
     password: "",
     confirmPassword: "",
     role: "CUSTOMER" as "CUSTOMER" | "TEMPLE_VENDOR",
+    country: countries[0].iso,
   })
+  const [selectedCountry, setSelectedCountry] = useState(countries[0])
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
   const [loading, setLoading] = useState(false)
@@ -33,6 +36,17 @@ export function RegisterForm() {
       ...prev,
       [e.target.name]: e.target.value,
     }))
+  }
+
+  const handleCountryChange = (value: string) => {
+    const country = countries.find(c => c.iso === value)
+    if (country) {
+      setSelectedCountry(country)
+      setFormData((prev) => ({
+        ...prev,
+        country: country.iso,
+      }))
+    }
   }
 
   const handleSubmit = async (e: React.FormEvent) => {
@@ -56,7 +70,7 @@ export function RegisterForm() {
       await register({
         name: formData.name,
         email: formData.email,
-        phone: formData.phone,
+        phone: `${selectedCountry.code}${formData.phone}`,
         password: formData.password,
         role: formData.role,
       })
@@ -90,6 +104,7 @@ export function RegisterForm() {
   return (
     <Card>
       <CardContent className="p-6">
+        <h1 className="text-center text-2xl font-bold text-blue-500 mb-4">DEBUG: FORM TEST</h1>
         <form onSubmit={handleSubmit} className="space-y-4">
           {error && (
             <Alert variant="destructive">
@@ -155,19 +170,38 @@ export function RegisterForm() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="phone">Phone (optional)</Label>
-            <div className="relative">
-              <Phone className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="phone"
-                name="phone"
-                type="tel"
-                placeholder="+1 234 567 8900"
-                className="pl-10"
-                value={formData.phone}
-                onChange={handleChange}
-              />
+          <div className="grid grid-cols-3 gap-2">
+            <div className="space-y-2 col-span-1">
+              <Label htmlFor="country">Country</Label>
+              <Select onValueChange={handleCountryChange} value={formData.country}>
+                <SelectTrigger>
+                  <SelectValue placeholder="Country" />
+                </SelectTrigger>
+                <SelectContent>
+                  {countries.map((country) => (
+                    <SelectItem key={country.iso} value={country.iso}>
+                      {country.name}
+                    </SelectItem>
+                  ))}
+                </SelectContent>
+              </Select>
+            </div>
+            <div className="space-y-2 col-span-2">
+              <Label htmlFor="phone">Phone Number</Label>
+              <div className="relative">
+                <span className="absolute left-3 top-1/2 -translate-y-1/2 text-sm text-muted-foreground">
+                  {selectedCountry.code}
+                </span>
+                <Input
+                  id="phone"
+                  name="phone"
+                  type="tel"
+                  placeholder="123 456 7890"
+                  className="pl-12"
+                  value={formData.phone}
+                  onChange={handleChange}
+                />
+              </div>
             </div>
           </div>
 

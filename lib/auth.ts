@@ -1,5 +1,4 @@
 import { cookies } from "next/headers"
-import { prisma } from "./prisma"
 import bcrypt from "bcryptjs"
 import { SignJWT, jwtVerify } from "jose"
 
@@ -62,77 +61,7 @@ export async function requireRole(roles: SessionUser["role"][]): Promise<Session
   return session
 }
 
-export async function login(email: string, password: string) {
-  const user = await prisma.user.findUnique({
-    where: { email },
-    include: {
-      vendor: {
-        include: { temple: true },
-      },
-    },
-  })
-
-  if (!user || !user.isActive) {
-    throw new Error("Invalid credentials")
-  }
-
-  const isValid = await verifyPassword(password, user.password)
-  if (!isValid) {
-    throw new Error("Invalid credentials")
-  }
-
-  const sessionUser: SessionUser = {
-    id: user.id,
-    email: user.email,
-    name: user.name,
-    role: user.role as SessionUser["role"],
-    vendorId: user.vendor?.id,
-    templeId: user.vendor?.temple?.id,
-  }
-
-  const token = await createToken(sessionUser)
-  const cookieStore = await cookies()
-  cookieStore.set("auth-token", token, {
-    httpOnly: true,
-    secure: process.env.NODE_ENV === "production",
-    sameSite: "lax",
-    maxAge: 60 * 60 * 24 * 7, // 7 days
-  })
-
-  return sessionUser
-}
-
 export async function logout() {
   const cookieStore = await cookies()
   cookieStore.delete("auth-token")
-}
-
-export async function register(data: {
-  email: string
-  password: string
-  name: string
-  phone?: string
-  role?: "CUSTOMER" | "TEMPLE_VENDOR"
-}) {
-  const existingUser = await prisma.user.findUnique({
-    where: { email: data.email },
-  })
-
-  if (existingUser) {
-    throw new Error("Email already exists")
-  }
-
-  const hashedPassword = await hashPassword(data.password)
-
-  const user = await prisma.user.create({
-    data: {
-      email: data.email,
-      password: hashedPassword,
-      name: data.name,
-      phone: data.phone,
-      role: data.role || "CUSTOMER",
-    },
-  })
-
-  return user
 }

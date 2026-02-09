@@ -1,95 +1,80 @@
 "use client"
 
 import { createContext, useContext, useState, useEffect, type ReactNode } from "react"
+import { createSupabaseBrowserClient } from "@/lib/supabase/client"
+import { type Session, type User } from "@supabase/supabase-js"
 
-interface User {
-  id: string
-  email: string
-  name: string
-  role: "SUPER_ADMIN" | "TEMPLE_VENDOR" | "CUSTOMER"
-  vendorId?: string
-  templeId?: string
+interface Profile {
+  full_name: string
+  role: "ADMIN" | "VENDOR" | "CUSTOMER"
+}
+
+// Combine Supabase session with our custom profile data
+interface AppSession {
+  user: User
+  profile: Profile
 }
 
 interface AuthContextType {
-  user: User | null
+  session: AppSession | null
   loading: boolean
-  login: (email: string, password: string) => Promise<void>
   logout: () => Promise<void>
-  register: (data: RegisterData) => Promise<void>
-  refreshUser: () => Promise<void>
-}
-
-interface RegisterData {
-  email: string
-  password: string
-  name: string
-  phone?: string
-  role?: "CUSTOMER" | "TEMPLE_VENDOR"
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined)
 
 export function AuthProvider({ children }: { children: ReactNode }) {
-  const [user, setUser] = useState<User | null>(null)
+  const supabase = createSupabaseBrowserClient()
+  const [session, setSession] = useState<AppSession | null>(null)
   const [loading, setLoading] = useState(true)
 
-  const refreshUser = async () => {
-    try {
-      const res = await fetch("/api/auth/me")
-      if (res.ok) {
-        const data = await res.json()
-        setUser(data.user)
-      } else {
-        setUser(null)
-      }
-    } catch {
-      setUser(null)
-    } finally {
-      setLoading(false)
-    }
-  }
-
   useEffect(() => {
-    refreshUser()
-  }, [])
+    // This is the single source of truth for authentication state
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(async (event, session) => {
+      // On initial load, session is null, then it's fetched.
+      // On login, event is SIGNED_IN and session is available.
+      // On logout, event is SIGNED_OUT and session is null.
 
-  const login = async (email: string, password: string) => {
-    const res = await fetch("/api/auth/login", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify({ email, password }),
+      if (session) {
+        // User is logged in, now fetch their profile
+        const { data: profile, error } = await supabase
+          .from("profiles")
+          .select("full_name, role")
+          .eq("id", session.user.id)
+          .single()
+
+        if (error) {
+          console.error("Error fetching profile:", error)
+          // If profile fetch fails, log them out to be safe
+          await supabase.auth.signOut()
+          setSession(null)
+        } else if (profile) {
+          // Both session and profile are available, create the app session
+          setSession({
+            user: session.user,
+            profile: profile as Profile,
+          })
+        }
+      } else {
+        // User is logged out
+        setSession(null)
+      }
+      setLoading(false)
     })
 
-    if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.message || "Login failed")
+    return () => {
+      subscription.unsubscribe()
     }
-
-    const data = await res.json()
-    setUser(data.user)
-  }
+  }, [supabase])
 
   const logout = async () => {
-    await fetch("/api/auth/logout", { method: "POST" })
-    setUser(null)
-  }
-
-  const register = async (data: RegisterData) => {
-    const res = await fetch("/api/auth/register", {
-      method: "POST",
-      headers: { "Content-Type": "application/json" },
-      body: JSON.stringify(data),
-    })
-
-    if (!res.ok) {
-      const error = await res.json()
-      throw new Error(error.message || "Registration failed")
-    }
+    await supabase.auth.signOut()
   }
 
   return (
-    <AuthContext.Provider value={{ user, loading, login, logout, register, refreshUser }}>
+    <AuthContext.Provider value={{ session, loading, logout }}>
       {children}
     </AuthContext.Provider>
   )

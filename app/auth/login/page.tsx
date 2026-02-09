@@ -1,10 +1,10 @@
 "use client"
 
 import type React from "react"
-
 import { useState } from "react"
 import { useRouter } from "next/navigation"
 import Link from "next/link"
+import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -15,8 +15,10 @@ import { MainLayout } from "@/components/layout/main-layout"
 
 export default function LoginPage() {
   const router = useRouter()
+  const supabase = createSupabaseBrowserClient()
   const [isLoading, setIsLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
+  const [error, setError] = useState("")
   const [formData, setFormData] = useState({
     email: "",
     password: "",
@@ -25,11 +27,21 @@ export default function LoginPage() {
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault()
     setIsLoading(true)
+    setError("")
 
-    // Simulate login
-    await new Promise((resolve) => setTimeout(resolve, 1500))
+    const { error } = await supabase.auth.signInWithPassword({
+      email: formData.email,
+      password: formData.password,
+    })
 
-    router.push("/")
+    if (error) {
+      setError(error.message)
+      setIsLoading(false)
+    } else {
+      // onAuthStateChange in AuthContext will handle the redirect and state update.
+      // We just need to push to the home page.
+      router.push("/")
+    }
   }
 
   return (
@@ -42,6 +54,7 @@ export default function LoginPage() {
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-4">
+              {error && <p className="text-red-500 text-sm text-center">{error}</p>}
               <div className="space-y-2">
                 <Label htmlFor="email">Email</Label>
                 <Input
