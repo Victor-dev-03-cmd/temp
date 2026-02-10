@@ -1,0 +1,160 @@
+[
+  {
+    "name": "India",
+    "iso2": "IN",
+    "phone_code": "+91",
+    "states": [
+      {"name": "Andaman and Nicobar Islands", "cities": ["Port Blair"]},
+      {"name": "Andhra Pradesh", "cities": ["Visakhapatnam", "Vijayawada", "Guntur", "Nellore", "Tirupati", "Kurnool"]},
+      {"name": "Arunachal Pradesh", "cities": ["Itanagar", "Tawang"]},
+      {"name": "Assam", "cities": ["Guwahati", "Dibrugarh", "Silchar", "Jorhat"]},
+      {"name": "Bihar", "cities": ["Patna", "Gaya", "Bhagalpur", "Muzaffarpur"]},
+      {"name": "Chandigarh", "cities": ["Chandigarh"]},
+      {"name": "Chhattisgarh", "cities": ["Raipur", "Bhilai", "Bilaspur"]},
+      {"name": "Dadra and Nagar Haveli and Daman and Diu", "cities": ["Daman", "Silvassa"]},
+      {"name": "Delhi", "cities": ["New Delhi", "Delhi"]},
+      {"name": "Goa", "cities": ["Panaji", "Vasco da Gama", "Margao"]},
+      {"name": "Gujarat", "cities": ["Ahmedabad", "Surat", "Vadodara", "Rajkot", "Gandhinagar"]},
+      {"name": "Haryana", "cities": ["Faridabad", "Gurugram", "Panipat", "Ambala"]},
+      {"name": "Himachal Pradesh", "cities": ["Shimla", "Manali", "Dharamshala"]},
+      {"name": "Jammu and Kashmir", "cities": ["Srinagar", "Jammu", "Anantnag"]},
+      {"name": "Jharkhand", "cities": ["Ranchi", "Jamshedpur", "Dhanbad"]},
+      {"name": "Karnataka", "cities": ["Bengaluru", "Mysuru", "Hubballi", "Mangaluru", "Belagavi"]},
+      {"name": "Kerala", "cities": ["Thiruvananthapuram", "Kochi", "Kozhikode", "Thrissur", "Kollam"]},
+      {"name": "Ladakh", "cities": ["Leh", "Kargil"]},
+      {"name": "Lakshadweep", "cities": ["Kavaratti"]},
+      {"name": "Madhya Pradesh", "cities": ["Indore", "Bhopal", "Jabalpur", "Gwalior"]},
+      {"name": "Maharashtra", "cities": ["Mumbai", "Pune", "Nagpur", "Nashik", "Aurangabad"]},
+      {"name": "Manipur", "cities": ["Imphal"]},
+      {"name": "Meghalaya", "cities": ["Shillong"]},
+      {"name": "Mizoram", "cities": ["Aizawl"]},
+      {"name": "Nagaland", "cities": ["Kohima", "Dimapur"]},
+      {"name": "Odisha", "cities": ["Bhubaneswar", "Cuttack", "Puri", "Rourkela"]},
+      {"name": "Puducherry", "cities": ["Puducherry", "Karaikal"]},
+      {"name": "Punjab", "cities": ["Ludhiana", "Amritsar", "Jalandhar", "Patiala"]},
+      {"name": "Rajasthan", "cities": ["Jaipur", "Jodhpur", "Udaipur", "Kota", "Ajmer"]},
+      {"name": "Sikkim", "cities": ["Gangtok"]},
+      {"name": "Tamil Nadu", "cities": ["Chennai", "Coimbatore", "Madurai", "Tiruchirappalli", "Salem", "Tirunelveli", "Vellore", "Kanyakumari", "Erode", "Thanjavur"]},
+      {"name": "Telangana", "cities": ["Hyderabad", "Warangal", "Nizamabad", "Karimnagar"]},
+      {"name": "Tripura", "cities": ["Agartala"]},
+      {"name": "Uttar Pradesh", "cities": ["Lucknow", "Kanpur", "Varanasi", "Agra", "Prayagraj"]},
+      {"name": "Uttarakhand", "cities": ["Dehradun", "Haridwar", "Rishikesh"]},
+      {"name": "West Bengal", "cities": ["Kolkata", "Howrah", "Durgapur", "Asansol", "Siliguri"]}
+    ]
+  },
+  {
+    "name": "Sri Lanka",
+    "iso2": "LK",
+    "phone_code": "+94",
+    "states": [
+      {"name": "Western Province", "cities": ["Colombo", "Gampaha", "Kalutara", "Negombo", "Dehiwala-Mount Lavinia"]},
+      {"name": "Central Province", "cities": ["Kandy", "Nuwara Eliya", "Matale", "Dambulla", "Hatton"]},
+      {"name": "Southern Province", "cities": ["Galle", "Matara", "Hambantota", "Unawatuna", "Mirissa"]},
+      {"name": "Northern Province", "cities": ["Jaffna", "Vavuniya", "Kilinochchi", "Mannar", "Point Pedro"]},
+      {"name": "Eastern Province", "cities": ["Trincomalee", "Batticaloa", "Ampara", "Kalmunai"]},
+      {"name": "North Western Province", "cities": ["Kurunegala", "Puttalam", "Chilaw"]},
+      {"name": "North Central Province", "cities": ["Anuradhapura", "Polonnaruwa"]},
+      {"name": "Uva Province", "cities": ["Badulla", "Bandarawela", "Ella", "Monaragala"]},
+      {"name": "Sabaragamuwa Province", "cities": ["Ratnapura", "Kegalle", "Balangoda"]}
+    ]
+  },
+  {
+    "name": "Malaysia",
+    "iso2": "MY",
+    "phone_code": "+60",
+    "states": [
+      {"name": "Johor", "cities": ["Johor Bahru", "Muar", "Batu Pahat"]},
+      {"name": "Kedah", "cities": ["Alor Setar", "Sungai Petani", "Langkawi"]},
+      {"name": "Kelantan", "cities": ["Kota Bharu"]},
+      {"name": "Kuala Lumpur", "cities": ["Kuala Lumpur"]},
+      {"name": "Labuan", "cities": ["Victoria"]},
+      {"name": "Malacca", "cities": ["Malacca City"]},
+      {"name": "Negeri Sembilan", "cities": ["Seremban", "Port Dickson"]},
+      {"name": "Pahang", "cities": ["Kuantan", "Genting Highlands"]},
+      {"name": "Penang", "cities": ["George Town", "Butterworth", "Bayan Lepas"]},
+      {"name": "Perak", "cities": ["Ipoh", "Taiping"]},
+      {"name": "Perlis", "cities": ["Kangar"]},
+      {"name": "Putrajaya", "cities": ["Putrajaya"]},
+      {"name": "Sabah", "cities": ["Kota Kinabalu", "Sandakan", "Tawau"]},
+      {"name": "Sarawak", "cities": ["Kuching", "Miri", "Sibu"]},
+      {"name": "Selangor", "cities": ["Petaling Jaya", "Shah Alam", "Klang", "Subang Jaya"]},
+      {"name": "Terengganu", "cities": ["Kuala Terengganu"]}
+    ]
+  },
+  {
+    "name": "Singapore",
+    "iso2": "SG",
+    "phone_code": "+65",
+    "states": [
+      {"name": "Singapore", "cities": ["Singapore"]}
+    ]
+  },
+  {
+    "name": "Thailand",
+    "iso2": "TH",
+    "phone_code": "+66",
+    "states": [
+      {"name": "Bangkok", "cities": ["Bangkok"]},
+      {"name": "Chiang Mai", "cities": ["Chiang Mai"]},
+      {"name": "Phuket", "cities": ["Phuket"]},
+      {"name": "Chon Buri", "cities": ["Pattaya", "Chon Buri"]},
+      {"name": "Krabi", "cities": ["Krabi", "Ao Nang"]}
+    ]
+  },
+  {
+    "name": "Indonesia",
+    "iso2": "ID",
+    "phone_code": "+62",
+    "states": [
+      {"name": "Jakarta", "cities": ["Jakarta"]},
+      {"name": "Bali", "cities": ["Denpasar", "Ubud", "Kuta"]},
+      {"name": "West Java", "cities": ["Bandung", "Bekasi", "Bogor"]},
+      {"name": "East Java", "cities": ["Surabaya", "Malang"]}
+    ]
+  },
+  {
+    "name": "Philippines",
+    "iso2": "PH",
+    "phone_code": "+63",
+    "states": [
+      {"name": "Metro Manila", "cities": ["Manila", "Quezon City", "Makati"]},
+      {"name": "Cebu", "cities": ["Cebu City", "Mandaue"]},
+      {"name": "Davao Region", "cities": ["Davao City"]}
+    ]
+  },
+  {
+    "name": "Vietnam",
+    "iso2": "VN",
+    "phone_code": "+84",
+    "states": [
+      {"name": "Hanoi", "cities": ["Hanoi"]},
+      {"name": "Ho Chi Minh City", "cities": ["Ho Chi Minh City"]},
+      {"name": "Da Nang", "cities": ["Da Nang"]},
+      {"name": "Quang Ninh", "cities": ["Ha Long"]}
+    ]
+  },
+  {
+    "name": "Nepal",
+    "iso2": "NP",
+    "phone_code": "+977",
+    "states": [
+      {"name": "Bagmati Province", "cities": ["Kathmandu", "Lalitpur", "Bhaktapur"]},
+      {"name": "Gandaki Province", "cities": ["Pokhara"]},
+      {"name": "Lumbini Province", "cities": ["Lumbini", "Butwal"]}
+    ]
+  },
+  {
+    "name": "United Arab Emirates",
+    "iso2": "AE",
+    "phone_code": "+971",
+    "states": [
+      {"name": "Abu Dhabi", "cities": ["Abu Dhabi", "Al Ain"]},
+      {"name": "Dubai", "cities": ["Dubai"]},
+      {"name": "Sharjah", "cities": ["Sharjah"]},
+      {"name": "Ajman", "cities": ["Ajman"]},
+      {"name": "Umm Al-Quwain", "cities": ["Umm Al-Quwain"]},
+      {"name": "Ras Al Khaimah", "cities": ["Ras Al Khaimah"]},
+      {"name": "Fujairah", "cities": ["Fujairah"]}
+    ]
+  }
+]

@@ -1,27 +1,36 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter } from "next/navigation"
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select"
 import { Search, MapPin } from "lucide-react"
+import locationData from "@/config/countries-states-cities.json"
 
 export function HeroSection() {
   const router = useRouter()
   const [searchQuery, setSearchQuery] = useState("")
-  const [country, setCountry] = useState("")
+  const [selectedCountry, setSelectedCountry] = useState("")
+  const [selectedState, setSelectedState] = useState("")
+  const [states, setStates] = useState<any[]>([])
+
+  useEffect(() => {
+    const country = locationData.find(c => c.iso2 === selectedCountry)
+    setStates(country?.states || [])
+    setSelectedState("")
+  }, [selectedCountry])
 
   const handleSearch = () => {
     const params = new URLSearchParams()
     if (searchQuery) params.set("q", searchQuery)
-    if (country) params.set("country", country)
+    if (selectedCountry) params.set("country", selectedCountry)
+    if (selectedState) params.set("state", selectedState)
     router.push(`/temples?${params.toString()}`)
   }
 
   return (
     <section className="relative bg-gradient-to-b from-primary/10 via-background to-background py-20 lg:py-32">
-      {/* Background Pattern */}
       <div className="absolute inset-0 bg-[url('/temple-architecture-pattern-subtle.jpg')] opacity-5 bg-cover bg-center" />
 
       <div className="container mx-auto px-4 relative">
@@ -36,8 +45,9 @@ export function HeroSection() {
 
           {/* Search Box */}
           <div className="bg-card rounded-xl shadow-lg p-4 md:p-6 border">
-            <div className="flex flex-col md:flex-row gap-4">
-              <div className="flex-1 relative">
+            <div className="flex flex-col gap-4">
+              {/* First Row: Search Input */}
+              <div className="relative">
                 <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-5 w-5 text-muted-foreground" />
                 <Input
                   placeholder="Search temples by name or location..."
@@ -47,25 +57,44 @@ export function HeroSection() {
                   onKeyDown={(e) => e.key === "Enter" && handleSearch()}
                 />
               </div>
-              <Select value={country} onValueChange={setCountry}>
-                <SelectTrigger className="w-full md:w-48 h-12">
-                  <MapPin className="h-4 w-4 mr-2" />
-                  <SelectValue placeholder="Country" />
-                </SelectTrigger>
-                <SelectContent>
-                  <SelectItem value="all">All Countries</SelectItem>
-                  <SelectItem value="IN">India</SelectItem>
-                  <SelectItem value="LK">Sri Lanka</SelectItem>
-                  <SelectItem value="MY">Malaysia</SelectItem>
-                  <SelectItem value="SG">Singapore</SelectItem>
-                  <SelectItem value="US">United States</SelectItem>
-                  <SelectItem value="UK">United Kingdom</SelectItem>
-                </SelectContent>
-              </Select>
-              <Button size="lg" className="h-12 px-8" onClick={handleSearch}>
-                <Search className="h-5 w-5 mr-2" />
-                Search
-              </Button>
+              
+              {/* Second Row: Location and Search Button */}
+              <div className="flex flex-col md:flex-row gap-4">
+                {/* Country Select */}
+                <Select value={selectedCountry} onValueChange={setSelectedCountry}>
+                  <SelectTrigger className="w-full h-12">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="Country" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {locationData.map((country) => (
+                      <SelectItem key={country.iso2} value={country.iso2}>
+                        {country.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                {/* State/Province Select */}
+                <Select value={selectedState} onValueChange={setSelectedState} disabled={!selectedCountry || states.length === 0}>
+                  <SelectTrigger className="w-full h-12">
+                    <MapPin className="h-4 w-4 mr-2" />
+                    <SelectValue placeholder="State/Province" />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {states.map((state) => (
+                      <SelectItem key={state.name} value={state.name}>
+                        {state.name}
+                      </SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
+
+                <Button size="lg" className="h-10 px-8" onClick={handleSearch}>
+                  <Search className="h-5 w-5 mr-2" />
+                  Search
+                </Button>
+              </div>
             </div>
           </div>
 

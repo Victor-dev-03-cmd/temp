@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { useRouter, useSearchParams } from "next/navigation"
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card"
 import { Label } from "@/components/ui/label"
@@ -12,35 +12,56 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { Accordion, AccordionContent, AccordionItem, AccordionTrigger } from "@/components/ui/accordion"
 import { Search, X, SlidersHorizontal, MapPin, Star, Ticket } from "lucide-react"
 import { Suspense } from "react"
+import locationData from "@/config/countries-states-cities.json"
 
 function TempleFiltersContent() {
   const router = useRouter()
   const searchParams = useSearchParams()
 
-  const [filters, setFilters] = useState({
-    q: searchParams.get("q") || "",
-    country: searchParams.get("country") || "",
-    province: searchParams.get("province") || "",
-    district: searchParams.get("district") || "",
-  })
+  // State for filters
+  const [q, setQ] = useState(searchParams.get("q") || "")
+  const [selectedCountry, setSelectedCountry] = useState(searchParams.get("country") || "")
+  const [selectedState, setSelectedState] = useState(searchParams.get("state") || "")
+  const [selectedCity, setSelectedCity] = useState(searchParams.get("city") || "") // <-- New state for City
+  
+  // State for cascading dropdowns
+  const [statesList, setStatesList] = useState<any[]>([])
+  const [citiesList, setCitiesList] = useState<string[]>([]) // <-- New state for cities list
 
+  // Other filters
   const [priceRange, setPriceRange] = useState([0, 500])
   const [rating, setRating] = useState<number | null>(null)
   const [amenities, setAmenities] = useState<string[]>([])
 
+  // Effect to populate states when country changes
+  useEffect(() => {
+    const country = locationData.find(c => c.iso2 === selectedCountry)
+    setStatesList(country?.states || [])
+    setCitiesList([]) // Clear cities when country changes
+    if (!searchParams.has('state')) setSelectedState("")
+    if (!searchParams.has('city')) setSelectedCity("")
+  }, [selectedCountry, searchParams])
+
+  // Effect to populate cities when state changes
+  useEffect(() => {
+    const state = statesList.find(s => s.name === selectedState)
+    setCitiesList(state?.cities || [])
+    if (!searchParams.has('city')) setSelectedCity("")
+  }, [selectedState, statesList, searchParams])
+
+
   const applyFilters = () => {
-    const params = new URLSearchParams()
-    Object.entries(filters).forEach(([key, value]) => {
-      if (value) params.set(key, value)
-    })
+    const params = new URLSearchParams(searchParams.toString())
+    
+    if (q) params.set("q", q); else params.delete("q")
+    if (selectedCountry) params.set("country", selectedCountry); else params.delete("country")
+    if (selectedState) params.set("state", selectedState); else params.delete("state")
+    if (selectedCity) params.set("city", selectedCity); else params.delete("city") // <-- Add city to params
+    
     router.push(`/temples?${params.toString()}`)
   }
 
   const clearFilters = () => {
-    setFilters({ q: "", country: "", province: "", district: "" })
-    setPriceRange([0, 500])
-    setRating(null)
-    setAmenities([])
     router.push("/temples")
   }
 
@@ -49,14 +70,8 @@ function TempleFiltersContent() {
   }
 
   const amenityOptions = [
-    "Parking",
-    "Wheelchair Access",
-    "Prasadam Counter",
-    "Shoe Storage",
-    "Rest Rooms",
-    "Drinking Water",
-    "Guide Services",
-    "Photography Allowed",
+    "Parking", "Wheelchair Access", "Prasadam Counter", "Shoe Storage", 
+    "Rest Rooms", "Drinking Water", "Guide Services", "Photography Allowed",
   ]
 
   return (
@@ -74,25 +89,21 @@ function TempleFiltersContent() {
         </div>
       </CardHeader>
       <CardContent className="space-y-1">
-        {/* Search */}
         <div className="space-y-2 pb-4">
-          <Label htmlFor="search" className="text-sm font-medium">
-            Search Temples
-          </Label>
+          <Label htmlFor="search" className="text-sm font-medium">Search Temples</Label>
           <div className="relative">
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 h-4 w-4 text-muted-foreground" />
             <Input
               id="search"
               placeholder="Temple name..."
               className="pl-9 bg-muted/50"
-              value={filters.q}
-              onChange={(e) => setFilters((prev) => ({ ...prev, q: e.target.value }))}
+              value={q}
+              onChange={(e) => setQ(e.target.value)}
             />
           </div>
         </div>
 
         <Accordion type="multiple" defaultValue={["location", "price", "rating"]} className="w-full">
-          {/* Location Filters */}
           <AccordionItem value="location" className="border-b-0">
             <AccordionTrigger className="py-3 hover:no-underline">
               <span className="flex items-center gap-2 text-sm font-medium">
@@ -103,67 +114,64 @@ function TempleFiltersContent() {
             <AccordionContent className="space-y-3 pb-4">
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">Country</Label>
-                <Select
-                  value={filters.country}
-                  onValueChange={(value) => setFilters((prev) => ({ ...prev, country: value }))}
+                <Select 
+                  value={selectedCountry} 
+                  onValueChange={(value) => setSelectedCountry(value === "all" ? "" : value)}
                 >
                   <SelectTrigger className="bg-muted/50">
                     <SelectValue placeholder="All Countries" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All Countries</SelectItem>
-                    <SelectItem value="IN">India</SelectItem>
-                    <SelectItem value="LK">Sri Lanka</SelectItem>
-                    <SelectItem value="MY">Malaysia</SelectItem>
-                    <SelectItem value="SG">Singapore</SelectItem>
-                    <SelectItem value="US">United States</SelectItem>
-                    <SelectItem value="UK">United Kingdom</SelectItem>
+                    {locationData.map(country => (
+                      <SelectItem key={country.iso2} value={country.iso2}>{country.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
               <div className="space-y-2">
                 <Label className="text-xs text-muted-foreground">State / Province</Label>
-                <Select
-                  value={filters.province}
-                  onValueChange={(value) => setFilters((prev) => ({ ...prev, province: value }))}
+                <Select 
+                  value={selectedState} 
+                  onValueChange={(value) => setSelectedState(value === "all" ? "" : value)} 
+                  disabled={!selectedCountry || statesList.length === 0}
                 >
                   <SelectTrigger className="bg-muted/50">
                     <SelectValue placeholder="All States" />
                   </SelectTrigger>
                   <SelectContent>
                     <SelectItem value="all">All States</SelectItem>
-                    <SelectItem value="TN">Tamil Nadu</SelectItem>
-                    <SelectItem value="KL">Kerala</SelectItem>
-                    <SelectItem value="KA">Karnataka</SelectItem>
-                    <SelectItem value="AP">Andhra Pradesh</SelectItem>
-                    <SelectItem value="MH">Maharashtra</SelectItem>
+                    {statesList.map(state => (
+                      <SelectItem key={state.name} value={state.name}>{state.name}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
 
+              {/* --- THIS IS THE NEW CITY FILTER --- */}
               <div className="space-y-2">
-                <Label className="text-xs text-muted-foreground">District</Label>
-                <Select
-                  value={filters.district}
-                  onValueChange={(value) => setFilters((prev) => ({ ...prev, district: value }))}
+                <Label className="text-xs text-muted-foreground">City</Label>
+                <Select 
+                  value={selectedCity} 
+                  onValueChange={(value) => setSelectedCity(value === "all" ? "" : value)}
+                  disabled={!selectedState || citiesList.length === 0}
                 >
                   <SelectTrigger className="bg-muted/50">
-                    <SelectValue placeholder="All Districts" />
+                    <SelectValue placeholder="All Cities" />
                   </SelectTrigger>
                   <SelectContent>
-                    <SelectItem value="all">All Districts</SelectItem>
-                    <SelectItem value="chennai">Chennai</SelectItem>
-                    <SelectItem value="madurai">Madurai</SelectItem>
-                    <SelectItem value="trichy">Tiruchirappalli</SelectItem>
-                    <SelectItem value="thanjavur">Thanjavur</SelectItem>
+                    <SelectItem value="all">All Cities</SelectItem>
+                    {citiesList.map(city => (
+                      <SelectItem key={city} value={city}>{city}</SelectItem>
+                    ))}
                   </SelectContent>
                 </Select>
               </div>
             </AccordionContent>
           </AccordionItem>
 
-          {/* Price Range */}
+          {/* Other filters remain unchanged */}
           <AccordionItem value="price" className="border-b-0">
             <AccordionTrigger className="py-3 hover:no-underline">
               <span className="flex items-center gap-2 text-sm font-medium">
@@ -183,7 +191,6 @@ function TempleFiltersContent() {
             </AccordionContent>
           </AccordionItem>
 
-          {/* Rating Filter */}
           <AccordionItem value="rating" className="border-b-0">
             <AccordionTrigger className="py-3 hover:no-underline">
               <span className="flex items-center gap-2 text-sm font-medium">
@@ -216,7 +223,6 @@ function TempleFiltersContent() {
             </AccordionContent>
           </AccordionItem>
 
-          {/* Amenities */}
           <AccordionItem value="amenities" className="border-b-0">
             <AccordionTrigger className="py-3 hover:no-underline">
               <span className="text-sm font-medium">Amenities</span>
@@ -238,7 +244,6 @@ function TempleFiltersContent() {
           </AccordionItem>
         </Accordion>
 
-        {/* Apply Button */}
         <div className="pt-4">
           <Button onClick={applyFilters} className="w-full">
             Apply Filters
