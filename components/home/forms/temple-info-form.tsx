@@ -43,7 +43,7 @@ export function TempleInfoForm({ onNext }: TempleInfoFormProps) {
     resolver: zodResolver(formSchema),
     defaultValues: {
       vendorEmail: session?.user.email,
-      country: "IN", // <-- THIS IS THE FIX: Set default country
+      country: "IN",
     },
   })
 
@@ -74,31 +74,31 @@ export function TempleInfoForm({ onNext }: TempleInfoFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="templeName">Temple Name</Label>
-          <Controller name="templeName" control={control} render={({ field }) => <Input {...field} />} />
+          <Controller name="templeName" control={control} render={({ field }) => <Input id="templeName" {...field} />} />
           {errors.templeName && <p className="text-red-500 text-sm">{errors.templeName.message}</p>}
         </div>
         <div className="space-y-2">
           <Label htmlFor="ownerName">Owner Name</Label>
-          <Controller name="ownerName" control={control} render={({ field }) => <Input {...field} />} />
+          <Controller name="ownerName" control={control} render={({ field }) => <Input id="ownerName" {...field} />} />
           {errors.ownerName && <p className="text-red-500 text-sm">{errors.ownerName.message}</p>}
         </div>
       </div>
 
       <div className="space-y-2">
         <Label htmlFor="address">Full Address</Label>
-        <Controller name="address" control={control} render={({ field }) => <Input {...field} placeholder="Street, Area" />} />
+        <Controller name="address" control={control} render={({ field }) => <Input id="address" {...field} placeholder="Street, Area" />} />
         {errors.address && <p className="text-red-500 text-sm">{errors.address.message}</p>}
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
         <div className="space-y-2">
-          <Label>Country</Label>
+          <Label htmlFor="country">Country</Label>
           <Controller
             name="country"
             control={control}
             render={({ field }) => (
               <Select onValueChange={field.onChange} value={field.value}>
-                <SelectTrigger><SelectValue placeholder="Select Country" /></SelectTrigger>
+                <SelectTrigger id="country"><SelectValue placeholder="Select Country" /></SelectTrigger>
                 <SelectContent>
                   {locationData.map(c => <SelectItem key={c.iso2} value={c.iso2}>{c.name}</SelectItem>)}
                 </SelectContent>
@@ -108,13 +108,13 @@ export function TempleInfoForm({ onNext }: TempleInfoFormProps) {
           {errors.country && <p className="text-red-500 text-sm">{errors.country.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label>State / Province</Label>
+          <Label htmlFor="state">State / Province</Label>
           <Controller
             name="state"
             control={control}
             render={({ field }) => (
               <Select onValueChange={field.onChange} value={field.value} disabled={!watchedCountry}>
-                <SelectTrigger><SelectValue placeholder="Select State" /></SelectTrigger>
+                <SelectTrigger id="state"><SelectValue placeholder="Select State" /></SelectTrigger>
                 <SelectContent>
                   {states.map(s => <SelectItem key={s.name} value={s.name}>{s.name}</SelectItem>)}
                 </SelectContent>
@@ -124,13 +124,13 @@ export function TempleInfoForm({ onNext }: TempleInfoFormProps) {
           {errors.state && <p className="text-red-500 text-sm">{errors.state.message}</p>}
         </div>
         <div className="space-y-2">
-          <Label>City</Label>
+          <Label htmlFor="city">City</Label>
           <Controller
             name="city"
             control={control}
             render={({ field }) => (
               <Select onValueChange={field.onChange} value={field.value} disabled={!watchedState}>
-                <SelectTrigger><SelectValue placeholder="Select City" /></SelectTrigger>
+                <SelectTrigger id="city"><SelectValue placeholder="Select City" /></SelectTrigger>
                 <SelectContent>
                   {cities.map(c => <SelectItem key={c} value={c}>{c}</SelectItem>)}
                 </SelectContent>
@@ -144,7 +144,7 @@ export function TempleInfoForm({ onNext }: TempleInfoFormProps) {
       <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
         <div className="space-y-2">
           <Label htmlFor="vendorEmail">Your Email (Registered)</Label>
-          <Controller name="vendorEmail" control={control} render={({ field }) => <Input {...field} type="email" disabled />} />
+          <Controller name="vendorEmail" control={control} render={({ field }) => <Input id="vendorEmail" {...field} type="email" disabled />} />
           {errors.vendorEmail && <p className="text-red-500 text-sm">{errors.vendorEmail.message}</p>}
         </div>
         <div className="space-y-2">

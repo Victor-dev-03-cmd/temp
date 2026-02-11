@@ -1,6 +1,7 @@
 "use client"
 
 import { useAuth } from "@/contexts/auth-context"
+import { createSupabaseBrowserClient } from "@/lib/supabase/client"
 import {
   DropdownMenu,
   DropdownMenuContent,
@@ -15,16 +16,16 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 
 export function UserNav() {
-  const { session, loading, logout } = useAuth()
+  const { session, loading } = useAuth()
   const router = useRouter()
+  const supabase = createSupabaseBrowserClient()!
 
   const handleLogout = async () => {
-    await logout()
-    router.push("/")
+    await supabase.auth.signOut()
+    router.refresh()
   }
 
   if (loading) {
-    // This provides a placeholder while the session is being loaded.
     return <div className="h-9 w-9 rounded-full animate-pulse bg-muted" />
   }
 
@@ -46,14 +47,14 @@ export function UserNav() {
           className="relative h-9 w-9 rounded-full hover:bg-transparent focus-visible:ring-0 focus-visible:ring-offset-0"
         >
           <Avatar className="h-9 w-9">
-            <AvatarFallback>{profile.full_name?.charAt(0).toUpperCase()}</AvatarFallback>
+            <AvatarFallback>{profile?.full_name?.charAt(0).toUpperCase() || user.email?.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{profile.full_name}</p>
+            <p className="text-sm font-medium leading-none">{profile.full_name || 'User'}</p>
             <p className="text-xs leading-none text-muted-foreground">
               {user.email}
             </p>
@@ -62,21 +63,21 @@ export function UserNav() {
         <DropdownMenuSeparator />
         
         {profile.role === "ADMIN" && (
-          <Link href="/admin">
-            <DropdownMenuItem>Dashboard</DropdownMenuItem>
-          </Link>
+          <DropdownMenuItem asChild>
+            <Link href="/admin">Dashboard</Link>
+          </DropdownMenuItem>
         )}
 
         {profile.role === "VENDOR" && (
-          <Link href="/vendor">
-            <DropdownMenuItem>Dashboard</DropdownMenuItem>
-          </Link>
+          <DropdownMenuItem asChild>
+            <Link href="/vendor">Dashboard</Link>
+          </DropdownMenuItem>
         )}
 
         {profile.role === "CUSTOMER" && (
-          <Link href="/account">
-            <DropdownMenuItem>My Account</DropdownMenuItem>
-          </Link>
+          <DropdownMenuItem asChild>
+            <Link href="/account">My Account</Link>
+          </DropdownMenuItem>
         )}
 
         <DropdownMenuSeparator />

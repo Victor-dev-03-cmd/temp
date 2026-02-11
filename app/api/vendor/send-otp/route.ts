@@ -1,9 +1,9 @@
 import { type NextRequest, NextResponse } from "next/server"
-import { createSupabaseServerClient } from "@/lib/supabase/server"
+import { createClient } from "@/lib/supabase/server"
 
 export async function POST(request: NextRequest) {
   const { phone } = await request.json()
-  const supabase = createSupabaseServerClient()
+  const supabase = await createClient() // <-- AWAIT added as you instructed
 
   if (!phone) {
     return NextResponse.json({ message: "Phone number is required." }, { status: 400 })

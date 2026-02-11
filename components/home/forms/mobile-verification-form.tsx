@@ -13,51 +13,23 @@ interface MobileVerificationFormProps {
 
 export function MobileVerificationForm({ phone, onNext, onBack }: MobileVerificationFormProps) {
   const [otp, setOtp] = useState("")
-  const [isSending, setIsSending] = useState(false)
   const [isVerifying, setIsVerifying] = useState(false)
   const [error, setError] = useState("")
-  const [otpSent, setOtpSent] = useState(false)
 
-  const handleSendOtp = async () => {
-    setIsSending(true)
-    setError("")
-    try {
-      const res = await fetch("/api/vendor/send-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || "Failed to send OTP.")
-      }
-      setOtpSent(true)
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred.")
-    } finally {
-      setIsSending(false)
-    }
-  }
-
+  // --- OTP LOGIC IS TEMPORARILY DISABLED ---
   const handleVerify = async () => {
     setIsVerifying(true)
     setError("")
-    try {
-      const res = await fetch("/api/vendor/verify-otp", {
-        method: "POST",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ phone, token: otp }),
-      })
-      if (!res.ok) {
-        const data = await res.json()
-        throw new Error(data.message || "Invalid OTP.")
-      }
+    
+    // Simulate OTP verification
+    await new Promise((resolve) => setTimeout(resolve, 1000))
+
+    if (otp === "123456") { // Use a mock OTP for now
       onNext()
-    } catch (err) {
-      setError(err instanceof Error ? err.message : "An unknown error occurred.")
-    } finally {
-      setIsVerifying(false)
+    } else {
+      setError("Invalid OTP. Please use '123456' to proceed.")
     }
+    setIsVerifying(false)
   }
 
   return (
@@ -65,44 +37,31 @@ export function MobileVerificationForm({ phone, onNext, onBack }: MobileVerifica
       <div className="text-center">
         <h2 className="text-xl font-semibold">Verify Your Mobile Number</h2>
         <p className="text-muted-foreground">
-          An OTP will be sent to <strong>{phone}</strong>.
+          Mobile verification is temporarily disabled. Use OTP <strong>123456</strong> to continue.
         </p>
       </div>
-
-      {!otpSent ? (
-        <Button onClick={handleSendOtp} className="w-full" disabled={isSending}>
-          {isSending ? (
-            <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
-              Sending OTP...
-            </>
-          ) : (
-            "Send OTP"
-          )}
-        </Button>
-      ) : (
-        <div className="flex justify-center">
-          <InputOTP maxLength={6} value={otp} onChange={(value) => setOtp(value)}>
-            <InputOTPGroup>
-              <InputOTPSlot index={0} />
-              <InputOTPSlot index={1} />
-              <InputOTPSlot index={2} />
-              <InputOTPSlot index={3} />
-              <InputOTPSlot index={4} />
-              <InputOTPSlot index={5} />
-            </InputOTPGroup>
-          </InputOTP>
-        </div>
-      )}
+      
+      <div className="flex justify-center">
+        <InputOTP maxLength={6} value={otp} onChange={(value) => setOtp(value)}>
+          <InputOTPGroup>
+            <InputOTPSlot index={0} />
+            <InputOTPSlot index={1} />
+            <InputOTPSlot index={2} />
+            <InputOTPSlot index={3} />
+            <InputOTPSlot index={4} />
+            <InputOTPSlot index={5} />
+          </InputOTPGroup>
+        </InputOTP>
+      </div>
 
       {error && <p className="text-red-500 text-sm text-center">{error}</p>}
       
       <div className="flex justify-between">
-        <Button variant="outline" onClick={onBack} disabled={isSending || isVerifying}>
+        <Button variant="outline" onClick={onBack} disabled={isVerifying}>
           <ArrowLeft className="mr-2 h-4 w-4" />
           Back
         </Button>
-        <Button onClick={handleVerify} disabled={!otpSent || isVerifying || otp.length < 6}>
+        <Button onClick={handleVerify} disabled={isVerifying || otp.length < 6}>
           {isVerifying ? (
             <>
               <Loader2 className="mr-2 h-4 w-4 animate-spin" />

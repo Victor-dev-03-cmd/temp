@@ -116,8 +116,11 @@
 }
 
 @layer base {
-  html {
-    scrollbar-gutter: stable;
+  :root {
+    --removed-body-scroll-bar-size: 0px !important;
+  }
+  html, body {
+    scrollbar-gutter: stable !important;
   }
   * {
     @apply border-border outline-ring/50;
